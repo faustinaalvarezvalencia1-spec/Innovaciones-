@@ -62,7 +62,7 @@ h1, h2, h3 { margin: 0; line-height: 1.05; }
 :focus-visible { outline: 2px solid var(--rosado-profundo); outline-offset: 3px; }
 
 /* ── Estructura ── */
-.app { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+.app { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); }
 
 .barra {
   position: sticky; top: 0; z-index: 20;
@@ -120,7 +120,7 @@ h1, h2, h3 { margin: 0; line-height: 1.05; }
 
 /* ── Formularios ── */
 .campos { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
-.campo { display: grid; gap: 6px; min-width: 0; }
+.campo { display: grid; gap: 6px; min-width: 0; align-content: start; }
 .campo.ancho { grid-column: 1 / -1; }
 .campo label, .etiqueta { font-weight: 600; font-size: 14px; }
 .campo .ayuda { font-size: 13px; color: var(--text-muted); }
@@ -147,6 +147,7 @@ textarea.entrada { border-radius: var(--radius-lg); min-height: 96px; resize: ve
 
 /* ── Botones ── */
 .boton {
+  white-space: nowrap;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 52px; padding: 12px 26px; border-radius: var(--radius-pill); border: 2px solid var(--action);
   background: var(--action); color: var(--crema); font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none;
@@ -156,7 +157,7 @@ textarea.entrada { border-radius: var(--radius-lg); min-height: 96px; resize: ve
 .boton:disabled { opacity: .5; cursor: not-allowed; }
 .boton.contorno { background: transparent; color: var(--gris); border-color: var(--gris); }
 .boton.contorno:hover { background: var(--gris); color: var(--crema); }
-.boton.texto { background: transparent; border-color: transparent; color: var(--rosado-profundo); padding: 8px 12px; min-height: 44px; }
+.boton.texto { white-space: normal; text-align: left; background: transparent; border-color: transparent; color: var(--rosado-profundo); padding: 8px 12px; min-height: 44px; }
 .boton.texto:hover { background: var(--rosa-pastel); }
 .boton.chico { min-height: 40px; padding: 6px 16px; font-size: 14px; }
 .boton.bloque { width: 100%; }
@@ -210,7 +211,7 @@ textarea.entrada { border-radius: var(--radius-lg); min-height: 96px; resize: ve
 
 /* ── Login con formas translúcidas (fuera del área de texto) ── */
 .portada { min-height: 100dvh; display: grid; place-items: center; padding: 24px var(--gutter); position: relative; overflow: hidden; }
-.portada .formas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.portada .formas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 .portada .caja { position: relative; z-index: 1; width: min(100%, 420px); background: var(--crema); border-radius: var(--radius-lg); padding: 32px 24px; box-shadow: var(--shadow); }
 .portada .caja img { height: 34px; width: auto; margin-bottom: 24px; }
 .portada h1 { font-size: 32px; margin-bottom: 4px; }
@@ -234,3 +235,25 @@ textarea.entrada { border-radius: var(--radius-lg); min-height: 96px; resize: ve
 .foto img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-md); }
 .selector-mes { display: inline-flex; align-items: center; gap: 4px; background: var(--blanco); border-radius: var(--radius-pill); padding: 4px; }
 .selector-mes strong { min-width: 150px; text-align: center; }
+
+/* Barra en pantallas medianas (iPad vertical, ventanas angostas) */
+@media (max-width: 1100px) {
+  .barra .usuario .nombre, .barra .usuario .oculto-mediano { display: none; }
+  .nav a { padding: 10px 12px; }
+}
+
+.fila-boton { flex: 1; min-width: 0; display: block; text-align: left; background: none; border: 0; padding: 4px 0; cursor: pointer; font-weight: 400; color: inherit; border-radius: 12px; }
+.fila-boton:hover .principal strong { color: var(--rosado-profundo); }
+
+.barra-guardar { position: sticky; bottom: 0; background: var(--blanco); padding: 10px 0 12px; margin-bottom: -12px; }
+@media (max-width: 760px) { .barra-guardar { bottom: calc(env(safe-area-inset-bottom) + 66px); } }
+
+.total-movil { display: none; }
+@media (max-width: 760px) {
+  .total-movil {
+    display: flex; justify-content: space-between; gap: 12px; position: fixed; left: 8px; right: 8px; z-index: 19;
+    bottom: calc(env(safe-area-inset-bottom) + 72px); background: var(--gris); color: var(--crema);
+    padding: 10px 18px; border-radius: var(--radius-pill); font-size: 14px; box-shadow: var(--shadow);
+  }
+  .total-movil strong { font-size: 17px; }
+}

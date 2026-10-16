@@ -197,6 +197,11 @@ export function CierreCaja() {
         </div>
       </div>
 
+      <div className="total-movil" aria-hidden="true">
+        <span>Venta <strong className="cifra">{pesos(venta)}</strong></span>
+        <span>Caja <strong className="cifra" style={{ color: caja < 0 ? 'var(--rosado-nina)' : undefined }}>{pesos(caja)}</strong></span>
+      </div>
+
       <section className="tarjeta" style={{ marginTop: 24 }}>
         <h2>Cierres de {nombreMes(mes)}</h2>
         {cierres.length === 0 ? <p className="vacio">Todavía no hay cierres este mes.</p> : (

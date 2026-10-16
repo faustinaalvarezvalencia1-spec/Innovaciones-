@@ -6,7 +6,7 @@ import { useSesion } from '../componentes/Sesion'
 export function Portada({ children }: { children: ReactNode }) {
   return (
     <div className="portada">
-      <svg className="formas" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <svg className="formas" viewBox="0 0 400 800" preserveAspectRatio="none" aria-hidden="true">
         <polygon points="0,0 190,0 0,210" fill="var(--forma-rosado)" />
         <polygon points="400,610 400,800 210,800" fill="var(--forma-purpura)" />
         <polygon points="400,0 400,150 290,0" fill="var(--forma-nina)" />

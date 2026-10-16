@@ -100,7 +100,7 @@ function Buscar({ productos, onElegir }: { productos: Producto[]; onElegir: (p: 
       <ul className="lista">
         {visibles.map(p => (
           <li key={p.id}>
-            <button className="boton texto" style={{ flex: 1, justifyContent: 'flex-start', textAlign: 'left', color: 'inherit', padding: 0, minHeight: 0 }}
+            <button className="fila-boton"
               onClick={() => onElegir(p)}>
               <span className="principal">
                 <strong>{p.referencia ? <>{p.referencia} · </> : null}<span style={{ fontWeight: 500 }}>{p.nombre}</span></strong>
@@ -128,7 +128,7 @@ function Critico({ productos, onElegir }: { productos: Producto[]; onElegir: (p:
         <ul className="lista">
           {criticos.map(p => (
             <li key={p.id}>
-              <button className="boton texto" style={{ flex: 1, justifyContent: 'flex-start', textAlign: 'left', color: 'inherit', padding: 0, minHeight: 0 }}
+              <button className="fila-boton"
                 onClick={() => onElegir(p)}>
                 <span className="principal">
                   <strong>{p.referencia ?? p.nombre}</strong>
@@ -220,7 +220,7 @@ function Conteo({ productos, onGuardado }: { productos: Producto[]; onGuardado: 
           )
         })}
       </ul>
-      <div className="acciones" style={{ position: 'sticky', bottom: 80, background: 'var(--blanco)', paddingTop: 8 }}>
+      <div className="acciones barra-guardar">
         <button className="boton bloque" disabled={contados.length === 0} onClick={() => setConfirmar(true)}>
           Guardar {contados.length || ''} conteo{contados.length === 1 ? '' : 's'}
         </button>
@@ -347,8 +347,8 @@ function FichaProducto({ producto: p, proveedores, onCerrar, onCambio }: {
 
   return (
     <Dialogo titulo={p.referencia ?? p.nombre} onCerrar={onCerrar}>
-      <p style={{ marginTop: 0 }}>{p.nombre}<br /><span className="muted">{p.subcategoria} · {p.grupo_conteo} · {pesos(p.precio)} por {p.unidad.toLowerCase()}</span></p>
-      <div className="rejilla dos" style={{ marginBottom: 16 }}>
+      <p style={{ marginTop: 0 }}>{p.nombre}<br /><span className="muted">{p.subcategoria} · {p.grupo_conteo} · precio {pesos(p.precio)}</span></p>
+      <div className="rejilla" style={{ marginBottom: 16, gridTemplateColumns: '1fr 1fr' }}>
         <div className="tarjeta suave" style={{ padding: 14 }}><p className="antetitulo">Exhibición</p><div className="cifra" style={{ fontSize: 26 }}>{numero(p.stock_exhibicion)} {u}</div></div>
         <div className="tarjeta fria" style={{ padding: 14 }}><p className="antetitulo" style={{ color: 'var(--gris)' }}>Reserva clases</p><div className="cifra" style={{ fontSize: 26 }}>{numero(p.stock_reserva_clases)} {u}</div></div>
       </div>

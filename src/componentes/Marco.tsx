@@ -31,7 +31,7 @@ export function Marco() {
           <div className="usuario">
             {esAdmin && (
               <a className="boton contorno chico" href={NOTION_URL} target="_blank" rel="noopener noreferrer" aria-label="Abrir Notion">
-                <Icono nombre="externo" tam={18} /><span className="oculto-movil" aria-hidden="true">Abrir Notion</span>
+                <Icono nombre="externo" tam={18} /><span className="oculto-mediano" aria-hidden="true">Abrir Notion</span>
               </a>
             )}
             <span className="nombre">{perfil?.nombre}</span>
