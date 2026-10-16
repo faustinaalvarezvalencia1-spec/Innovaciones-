@@ -257,3 +257,35 @@ textarea.entrada { border-radius: var(--radius-lg); min-height: 96px; resize: ve
   }
   .total-movil strong { font-size: 17px; }
 }
+
+/* ── Panel ── */
+.frase { font-size: clamp(18px, 2.4vw, 22px); font-weight: 500; line-height: 1.35; letter-spacing: -0.02em; margin: 0 0 18px; max-width: 60ch; }
+.cifras { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.cifra-tarjeta { padding: 16px 18px; }
+.cifra-tarjeta + .cifra-tarjeta { margin-top: 0; }
+.cifra.grande { font-size: clamp(24px, 3vw, 30px); line-height: 1.1; }
+.cifra-tarjeta .detalle { font-size: 13px; margin-top: 6px; line-height: 1.35; }
+.nota { font-size: 13px; margin: 8px 2px 0; }
+.progreso { height: 8px; background: var(--blanco); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+.progreso span { display: block; height: 100%; background: var(--rosado-profundo); border-radius: 999px; }
+.grafico svg { display: block; overflow: visible; }
+.tooltip { position: absolute; top: 0; right: 0; background: var(--blanco); border-radius: 14px; box-shadow: var(--shadow); padding: 10px 14px; font-size: 13px; min-width: 190px; pointer-events: none; }
+.tooltip div { display: flex; align-items: center; gap: 6px; }
+.tooltip div span { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tooltip i, .leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; margin-top: 8px; }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.barra-100 { display: flex; gap: 2px; height: 18px; border-radius: 6px; overflow: hidden; }
+.barra-100 span { display: block; min-width: 2px; }
+.muestra { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.barras-h { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.barras-h li { display: grid; grid-template-columns: minmax(90px, 38%) 1fr auto; align-items: center; gap: 10px; font-size: 14px; }
+.barras-h .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barras-h .pista { height: 14px; }
+.barras-h .pista span { display: block; height: 100%; background: var(--rosado-profundo); border-radius: 0 4px 4px 0; }
+.barras-h .valor { font-size: 14px; text-align: right; }
+@media (max-width: 760px) {
+  .cifra.grande { font-size: 21px; }
+  .cifra-tarjeta { padding: 14px; }
+}
+@media (max-width: 760px) { .cifras .cifra-tarjeta.suave { grid-column: 1 / -1; } }
