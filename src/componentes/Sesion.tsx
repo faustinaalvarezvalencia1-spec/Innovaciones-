@@ -8,6 +8,9 @@ interface EstadoSesion {
   sesion: Session | null
   perfil: Perfil | null
   esAdmin: boolean
+  /** true cuando la persona llegó desde el enlace del correo para crear o cambiar la contraseña */
+  creandoClave: boolean
+  terminarClave: () => void
   salir: () => Promise<void>
 }
 
@@ -17,10 +20,14 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   const [sesion, setSesion] = useState<Session | null>(null)
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [creandoClave, setCreandoClave] = useState(() => window.location.hash.includes('type=recovery'))
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSesion(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSesion(s))
+    const { data } = supabase.auth.onAuthStateChange((evento, s) => {
+      if (evento === 'PASSWORD_RECOVERY') setCreandoClave(true)
+      setSesion(s)
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -36,6 +43,8 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   const valor: EstadoSesion = {
     cargando, sesion, perfil,
     esAdmin: perfil?.rol === 'admin' && perfil.activo,
+    creandoClave,
+    terminarClave: () => setCreandoClave(false),
     salir: async () => { await supabase.auth.signOut() },
   }
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>

@@ -5,7 +5,7 @@ import './estilos.css'
 import { ProveedorSesion, useSesion } from './componentes/Sesion'
 import { Cargando, ProveedorToast } from './componentes/ui'
 import { Marco } from './componentes/Marco'
-import { Entrar } from './paginas/Entrar'
+import { Entrar, NuevaClave } from './paginas/Entrar'
 import { Inicio } from './paginas/Inicio'
 import { CierreCaja } from './paginas/CierreCaja'
 import { Gastos } from './paginas/Gastos'
@@ -18,8 +18,9 @@ function SoloAdmin({ children }: { children: ReactNode }) {
 }
 
 function Rutas() {
-  const { cargando, sesion, perfil } = useSesion()
+  const { cargando, sesion, perfil, creandoClave } = useSesion()
   if (cargando) return <div className="portada"><Cargando /></div>
+  if (creandoClave) return <NuevaClave />
   if (!sesion) return <Entrar />
   if (!perfil || perfil.rol === 'pendiente' || !perfil.activo) {
     return (

@@ -8,7 +8,8 @@ if (!url || !key) {
 }
 
 export const supabase = createClient(url, key, {
-  auth: { persistSession: true, autoRefreshToken: true },
+  // implicit: el enlace del correo funciona aunque se abra en otro navegador (Safari vs. app instalada).
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' },
 })
 
 export const NOTION_URL = 'https://app.notion.com/p/3fb8bbaba3198178b324ee6b945e4f80'
