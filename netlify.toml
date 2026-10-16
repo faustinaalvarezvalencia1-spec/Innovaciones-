@@ -1,0 +1,40 @@
+# Despliegue en Netlify desde GitHub.
+# Las llaves NO van aquí: se configuran en Netlify → Site configuration → Environment variables
+# (VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY, ver .env.example).
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# App de una sola página: todas las rutas cargan index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# El service worker y el manifest siempre frescos, para que las actualizaciones lleguen.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
