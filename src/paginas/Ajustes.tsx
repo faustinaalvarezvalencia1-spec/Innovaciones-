@@ -34,7 +34,7 @@ function Margen() {
   useEffect(() => {
     supabase.from('meses').select('margen_bruto_estimado, notas').eq('mes', mes).maybeSingle().then(({ data }) => {
       setExiste(!!data)
-      setTexto(String(Math.round(Number(data?.margen_bruto_estimado ?? 0.43) * 1000) / 10).replace('.', ','))
+      setTexto(String(Math.round(Number(data?.margen_bruto_estimado ?? 0.60) * 1000) / 10).replace('.', ','))
       setNotas(data?.notas ?? '')
     })
   }, [mes])
@@ -54,7 +54,7 @@ function Margen() {
   return (
     <section className="tarjeta suave">
       <h2>Margen estimado · {nombreMes(mes)}</h2>
-      <p className="muted" style={{ marginTop: -6 }}>Margen bruto sobre el precio de venta. Un markup de 70–80 % sobre el costo equivale a ~43 %. Se usa para el punto de equilibrio.</p>
+      <p className="muted" style={{ marginTop: -6 }}>Margen bruto sobre el precio de venta. Un markup de 150 % sobre el costo equivale a 60 % (70–80 % de markup ≈ 43 %). Se usa para el punto de equilibrio.</p>
       <div className="campos">
         <div className="campo">
           <label htmlFor="margen">Margen (%)</label>

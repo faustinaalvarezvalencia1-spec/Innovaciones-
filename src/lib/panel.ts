@@ -86,7 +86,7 @@ export async function cargarPanel(mes: string): Promise<DatosPanel> {
   const limite = esMesActual ? hoyIso : mesSiguiente(mes)
   const diasSinCierre = habiles.filter(d => d < limite && !conCierre.has(d))
 
-  const margen = Number(m.data?.margen_bruto_estimado ?? 0.43)
+  const margen = Number(m.data?.margen_bruto_estimado ?? 0.60)
   const fijosMensuales = suma(fijos.filter(f => f.frecuencia === 'Mensual'), f => f.valor_estimado)
   const nominaEstimada = suma(fijos.filter(f => f.frecuencia === 'Por día trabajado'), f => f.valor_estimado) * habiles.length
   const puntoEquilibrio = Math.round((fijosMensuales + nominaEstimada) / margen)
