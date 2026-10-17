@@ -1,0 +1,233 @@
+<title>Guía de caja Innovaciones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: una columna de lectura; arriba el acceso, luego dos fichas por persona y una tira de "cada día / semana / mes".
+   Sistema de diseño Innovaciones, deliberadamente en un solo tema claro (fondo crema de la marca). */
+:root {
+  --crema: #fffeed;
+  --blanco: #ffffff;
+  --gris: #2f3440;
+  --gris-medio: #4b5161;
+  --rosado-profundo: #c7304a;
+  --rosado-fuerte: #dc3d52;
+  --rosa-pastel: #f7dde0;
+  --purpura: #c5ccff;
+  --amarillo: #fdf4b7;
+  --linea: rgba(47, 52, 64, .14);
+  --font: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--crema); color: var(--gris); margin: 0;
+  font: 400 16px/1.6 var(--font); letter-spacing: -0.01em;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.hoja { max-width: 760px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(34px, 7vw, 54px); font-weight: 800; text-transform: uppercase; letter-spacing: -0.04em; line-height: 1; }
+h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+p { margin: 0; max-width: 65ch; }
+.ante { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--rosado-profundo); margin-bottom: 6px; }
+.muted { color: var(--gris-medio); }
+strong { font-weight: 700; }
+.marca { display: flex; align-items: baseline; gap: 10px; font-weight: 800; color: var(--rosado-fuerte); font-size: 26px; letter-spacing: -0.04em; }
+.marca small { font-size: 13px; color: var(--gris-medio); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+
+.acceso { background: var(--gris); color: var(--crema); border-radius: 24px; padding: 20px 22px; display: grid; gap: 12px; }
+.acceso .url { font-weight: 700; font-size: 18px; word-break: break-all; }
+.acceso .fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.acceso button {
+  font: 600 14px var(--font); border-radius: 999px; border: 2px solid var(--crema); background: transparent; color: var(--crema);
+  padding: 8px 16px; cursor: pointer; min-height: 40px;
+}
+.acceso button:hover, .acceso button:focus-visible { background: var(--crema); color: var(--gris); }
+.acceso p { color: #e9e8da; font-size: 14px; }
+:focus-visible { outline: 2px solid var(--rosado-profundo); outline-offset: 3px; }
+
+.fichas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.ficha { background: var(--blanco); border-radius: 24px; padding: 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.ficha.bryan { background: var(--purpura); }
+.ficha header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sticker { display: inline-block; background: var(--amarillo); color: var(--gris); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; transform: rotate(-4deg); white-space: nowrap; }
+ol.pasos { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: grid; gap: 12px; }
+ol.pasos li { counter-increment: paso; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+ol.pasos li::before {
+  content: counter(paso); width: 28px; height: 28px; border-radius: 50%; background: var(--gris); color: var(--crema);
+  display: grid; place-items: center; font-size: 13px; font-weight: 700; margin-top: 1px;
+}
+ul.lista { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.ruta { font-weight: 600; background: rgba(255,255,255,.6); border-radius: 8px; padding: 1px 7px; white-space: nowrap; }
+.ficha:not(.bryan) .ruta { background: var(--rosa-pastel); }
+
+.ritmo { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.ritmo section { border-top: 3px solid var(--gris); padding-top: 12px; display: grid; gap: 8px; align-content: start; }
+.ritmo .cuando { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--rosado-profundo); }
+
+.revisar { background: var(--rosa-pastel); border-radius: 24px; padding: 22px; display: grid; gap: 14px; }
+.tabla-envoltura { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--gris-medio); padding: 6px 8px; }
+td { padding: 10px 8px; border-top: 1px solid var(--linea); vertical-align: top; }
+
+.reglas { display: grid; gap: 10px; }
+.regla { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.regla svg { margin-top: 2px; }
+footer { font-size: 13px; color: var(--gris-medio); border-top: 1px solid var(--linea); padding-top: 14px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main class="hoja">
+  <div>
+    <div class="marca">innovaciones <small>Administración</small></div>
+  </div>
+
+  <header style="display:grid; gap:12px">
+    <p class="ante">Guía de uso diario</p>
+    <h1>Caja, gastos e inventario</h1>
+    <p class="muted">Lo que hace cada quien en la app, en qué orden y qué hacer cuando algo no cuadra. Para Faustina y Bryan.</p>
+  </header>
+
+  <section class="acceso" aria-labelledby="t-acceso">
+    <h2 id="t-acceso" style="color:var(--crema)">Entrar a la app</h2>
+    <div class="fila">
+      <span class="url" id="url-app">contabilidad-innovaciones.netlify.app</span>
+      <button type="button" id="copiar" aria-describedby="url-app">Copiar dirección</button>
+      <span id="copiado" role="status" style="font-size:14px"></span>
+    </div>
+    <p><strong style="color:var(--crema)">Instalarla:</strong> en iPad o iPhone, ábrela en Safari → botón Compartir → <em>Agregar a pantalla de inicio</em>. En Android, en Chrome → menú ⋮ → <em>Instalar aplicación</em>. La primera vez inicia sesión dentro de la app instalada.</p>
+    <p><strong style="color:var(--crema)">¿Sin contraseña o la olvidaste?</strong> En la pantalla de entrada toca <em>Crear o recuperar contraseña</em>, abre el enlace que llega al correo y crea una nueva de mínimo 8 caracteres.</p>
+  </section>
+
+  <div class="fichas">
+    <article class="ficha bryan" aria-labelledby="t-bryan">
+      <header><h2 id="t-bryan">Bryan</h2><span class="sticker">Cierres e inventario</span></header>
+
+      <h3>Al cerrar la tienda (6 p.m.)</h3>
+      <ol class="pasos">
+        <li><span>Abre <span class="ruta">Cierre</span>. La fecha ya trae el día de hoy.</span></li>
+        <li><span>Escribe la <strong>primera y la última factura</strong> del talonario que usaste hoy.</span></li>
+        <li><span>Escribe lo vendido en <strong>Efectivo</strong>, <strong>Transferencias</strong> (incluye lo cobrado por WhatsApp) y <strong>Datáfono</strong>.</span></li>
+        <li><span>Revisa la <strong>Base inicial</strong>: lo que había en caja al abrir.</span></li>
+        <li><span>Saca el efectivo sobrante y guárdalo aparte. Toca <em>Retirar el sobrante y dejar solo la base</em> para que el retiro quede anotado.</span></li>
+        <li><span>Mira la barra de abajo: <strong>Venta</strong> y <strong>Caja</strong>. Si sale un aviso rojo, corrígelo antes de seguir.</span></li>
+        <li><span>Toca <em>Revisar y guardar</em>, revisa el resumen y toca <em>Guardar cierre</em>.</span></li>
+      </ol>
+      <p class="muted" style="font-size:14px">Un cierre guardado ya no se edita. Si te equivocaste, escríbele a Faustina con el dato correcto: ella lo corrige con un ajuste.</p>
+
+      <h3>Cuando pase algo con la mercancía</h3>
+      <p style="font-size:15px">Abre <span class="ruta">Inventario</span>, busca por referencia (ej. <strong>DB-0767</strong>) o nombre y toca el producto:</p>
+      <ul class="lista" style="font-size:15px">
+        <li><strong>Entrada de compra</strong>: llegó mercancía. Cantidad en gramos (Miyuki) o unidades.</li>
+        <li><strong>Pasar a reserva de clases</strong>: sale de exhibición para las clases.</li>
+        <li><strong>Consumo en clase</strong>: lo que se gastó en una clase, con la técnica.</li>
+        <li><strong>Daño o merma</strong>: se dañó o se perdió. Escribe el motivo.</li>
+      </ul>
+
+      <h3>Una vez por semana: conteo</h3>
+      <p style="font-size:15px">En <span class="ruta">Inventario → Conteo semanal</span> la app abre la semana que toca (días 1–7 = Semana 1, 8–14 = Semana 2…). Cuenta lo que hay en exhibición, escribe cada cantidad y toca <em>Guardar conteos</em>. Lo que no contaste, déjalo vacío.</p>
+    </article>
+
+    <article class="ficha" aria-labelledby="t-faustina">
+      <header><h2 id="t-faustina">Faustina</h2><span class="sticker">Dueña</span></header>
+
+      <h3>Cada día</h3>
+      <ol class="pasos">
+        <li><span>Abre <span class="ruta">Inicio</span> y lee la frase de arriba: cómo va el mes y cuánto falta para el punto de equilibrio.</span></li>
+        <li><span>En <em>Cierres para revisar</em>, mira si el cierre de Bryan quedó en <strong>Revisar</strong> o si falta algún día.</span></li>
+        <li><span>Registra los gastos del día en <span class="ruta">Gastos</span>, con <strong>foto del soporte</strong> y el medio de pago real.</span></li>
+      </ol>
+      <p class="muted" style="font-size:14px">Solo los gastos pagados con <strong>Efectivo de caja</strong> se descuentan de la caja del día. Débito, transferencia o tu cuenta personal no la tocan.</p>
+
+      <h3>Corregir sin borrar</h3>
+      <ul class="lista" style="font-size:15px">
+        <li><strong>Un cierre</strong>: en <span class="ruta">Cierre</span>, en la lista del mes, toca <em>Ajustar</em>, elige el valor, escribe la diferencia (con − para restar) y el motivo.</li>
+        <li><strong>Un gasto</strong>: en <span class="ruta">Gastos</span> toca <em>Corregir</em>, y cambia el medio de pago o el valor, con motivo.</li>
+        <li><strong>El stock</strong>: haz un <em>Conteo</em> del producto. Para casos raros está <em>Ajuste</em>, que solo tú ves.</li>
+      </ul>
+
+      <h3>Configuración</h3>
+      <p style="font-size:15px">En <span class="ruta">Ajustes</span> manejas los gastos fijos, los proveedores, el margen del mes (43 %), los usuarios y los festivos. En la ficha de cada producto, <em>Editar datos del producto</em> sirve para poner el <strong>mínimo</strong>; sin mínimo, el producto no aparece en stock crítico.</p>
+    </article>
+  </div>
+
+  <section aria-labelledby="t-ritmo" style="display:grid; gap:14px">
+    <h2 id="t-ritmo">El ritmo del negocio</h2>
+    <div class="ritmo">
+      <section>
+        <span class="cuando">Cada día</span>
+        <p style="font-size:15px">Bryan hace el cierre a las 6 p.m. Faustina registra los gastos y mira el panel.</p>
+      </section>
+      <section>
+        <span class="cuando">Cada semana</span>
+        <p style="font-size:15px">Conteo del grupo de la semana. Faustina revisa el stock crítico y decide qué pedir a Beadsmith.</p>
+      </section>
+      <section>
+        <span class="cuando">Día 1 de cada mes</span>
+        <p style="font-size:15px">A las 6 a.m. aparece en Notion la página <em>Resumen del mes</em>. Revisa sus alertas: gastos sin medio de pago, valores estimados y fijos sin registrar.</p>
+      </section>
+    </div>
+  </section>
+
+  <section class="revisar" aria-labelledby="t-revisar">
+    <div>
+      <p class="ante">Estado del cierre</p>
+      <h2 id="t-revisar">Cuando un cierre sale en “Revisar”</h2>
+    </div>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th scope="col">Lo que dice</th><th scope="col">Qué pasó</th><th scope="col">Cómo se arregla</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Caja negativa</strong></td><td>Se retiró o se gastó en efectivo más de lo que había.</td><td>Revisa el retiro o el gasto en efectivo; corrige con <em>Ajustar</em> en el cierre o en el gasto.</td></tr>
+          <tr><td><strong>Venta en cero</strong></td><td>Se guardó sin ventas.</td><td>Si sí hubo ventas, <em>Ajustar</em> sumando efectivo, transferencias o datáfono.</td></tr>
+          <tr><td><strong>Medios de pago no suman la venta registrada</strong></td><td>Solo en cierres antiguos: el total de la hoja no coincide con la suma de los medios.</td><td><em>Ajustar</em> el medio de pago que faltó, con el motivo.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-reglas" style="display:grid; gap:14px">
+    <h2 id="t-reglas">Las reglas de siempre</h2>
+    <div class="reglas">
+      <div class="regla">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rosado-profundo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>
+        <p>Nada se borra. Todo error se corrige con un ajuste que dice el motivo, y queda el historial.</p>
+      </div>
+      <div class="regla">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rosado-profundo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>
+        <p>Las ventas de WhatsApp se cobran por transferencia y entran en el cierre de ese día.</p>
+      </div>
+      <div class="regla">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rosado-profundo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>
+        <p>Las clases no son ventas de la tienda. De las clases solo se registra la salida de materiales de la reserva.</p>
+      </div>
+      <div class="regla">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rosado-profundo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>
+        <p>Un cierre por día. Si la fecha ya tiene cierre, la app no deja guardar otro.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>Almacén Innovaciones · Pereira · Lunes a sábado, 9 a.m.–1 p.m. y 2 p.m.–6 p.m.</footer>
+</main>
+
+<script>
+  document.getElementById('copiar').addEventListener('click', () => {
+    const url = 'https://contabilidad-innovaciones.netlify.app'
+    const aviso = document.getElementById('copiado')
+    const elegir = () => {
+      const r = document.createRange(); r.selectNodeContents(document.getElementById('url-app'))
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r)
+      aviso.textContent = 'Dirección seleccionada: cópiala con el menú.'
+    }
+    try {
+      navigator.clipboard.writeText(url).then(() => { aviso.textContent = 'Copiada' }, elegir)
+    } catch (e) { elegir() }
+  })
+</script>
