@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Cierre } from '../lib/tipos'
+import { INICIO_SALDOS, type Cierre, type Cuenta, type RepartoCierre } from '../lib/tipos'
+import { esCaja, esDatafono, useCuentas } from '../lib/cuentas'
 import { diaSemana, fechaCorta, fechaLarga, hoy, leerPesos, mensajeError, nombreMes, pesos, primerDiaMes, mesSiguiente } from '../lib/formato'
 import { Aviso, CampoDinero, Dialogo, EstadoCierre, useToast } from '../componentes/ui'
 import { useSesion } from '../componentes/Sesion'
@@ -23,7 +24,7 @@ const vacio = (fecha: string, base: number, desde: string): Formulario => ({
 })
 
 export function CierreCaja() {
-  const { esAdmin, sesion } = useSesion()
+  const { esAdmin } = useSesion()
   const toast = useToast()
   const [f, setF] = useState<Formulario>(vacio(hoy(), 0, ''))
   const [gastosEfectivo, setGastosEfectivo] = useState(0)
@@ -34,6 +35,9 @@ export function CierreCaja() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [ajustando, setAjustando] = useState<Cierre | null>(null)
+  const cuentas = useCuentas()
+  const [reparto, setReparto] = useState<Record<string, number>>({})
+  const [tocadas, setTocadas] = useState<Set<string>>(new Set())
 
   const mes = primerDiaMes(f.fecha)
   const set = <K extends keyof Formulario>(k: K, v: Formulario[K]) => setF(prev => ({ ...prev, [k]: v }))
@@ -70,6 +74,17 @@ export function CierreCaja() {
   }, [f.fecha, esAdmin])
 
   const venta = f.efectivo + f.transferencias + f.datafono
+  const llevaReparto = f.fecha >= INICIO_SALDOS
+  // Caja y datáfono se llenan solos con el efectivo y el datáfono, hasta que alguien los cambie a mano.
+  const valorReparto = (c: Cuenta) => tocadas.has(c.id) ? (reparto[c.id] ?? 0)
+    : esCaja(c) ? f.efectivo : esDatafono(c) ? f.datafono : (reparto[c.id] ?? 0)
+  const repartoFilas = cuentas.map(c => ({ cuenta: c, valor: valorReparto(c) }))
+  const sumaReparto = repartoFilas.reduce((s, r) => s + r.valor, 0)
+  const porRepartir = venta - sumaReparto
+  const cambiarReparto = (id: string, n: number) => {
+    setReparto(p => ({ ...p, [id]: n }))
+    setTocadas(p => new Set(p).add(id))
+  }
   const caja = f.base + f.efectivo - gastosEfectivo - f.retiro
   const desde = f.desde ? parseInt(f.desde, 10) : null
   const hasta = f.hasta ? parseInt(f.hasta, 10) : null
@@ -81,8 +96,14 @@ export function CierreCaja() {
     if (f.fecha > hoy()) p.push('La fecha está en el futuro.')
     if (desde && hasta && hasta < desde) p.push('La factura "hasta" es menor que la factura "desde".')
     if (caja < 0) p.push(`La caja queda negativa (${pesos(caja)}). Revisa el retiro o los gastos en efectivo.`)
+    if (llevaReparto && cuentas.length === 0) p.push('No se cargaron las cuentas. Recarga la página.')
+    if (llevaReparto && cuentas.length > 0 && porRepartir !== 0) {
+      p.push(porRepartir > 0
+        ? `Falta repartir ${pesos(porRepartir)} entre las cuentas.`
+        : `El reparto se pasa ${pesos(-porRepartir)} de la venta.`)
+    }
     return p
-  }, [existente, f.fecha, desde, hasta, caja])
+  }, [existente, f.fecha, desde, hasta, caja, llevaReparto, cuentas.length, porRepartir])
 
   const avisos = useMemo(() => {
     const a: string[] = []
@@ -95,17 +116,18 @@ export function CierreCaja() {
 
   async function guardar() {
     setGuardando(true); setError(null)
-    const { error } = await supabase.from('cierres').insert({
-      fecha: f.fecha, factura_desde: desde, factura_hasta: hasta,
-      efectivo: f.efectivo, transferencias: f.transferencias, datafono: f.datafono,
-      base_inicial: f.base, retiro: f.retiro, observaciones: f.observaciones.trim() || null,
-      creado_por: sesion!.user.id,
+    const { error } = await supabase.rpc('registrar_cierre', {
+      p_fecha: f.fecha, p_factura_desde: desde, p_factura_hasta: hasta,
+      p_efectivo: f.efectivo, p_transferencias: f.transferencias, p_datafono: f.datafono,
+      p_base: f.base, p_retiro: f.retiro, p_observaciones: f.observaciones,
+      p_reparto: llevaReparto ? repartoFilas.filter(r => r.valor > 0).map(r => ({ cuenta_id: r.cuenta.id, valor: r.valor })) : [],
     })
     setGuardando(false)
     if (error) { setError(mensajeError(error)); return }
     setConfirmar(false)
     toast(`Cierre del ${fechaCorta(f.fecha)} guardado: ${pesos(venta)}`)
     setF(vacio(f.fecha, f.base, hasta ? String(hasta + 1) : ''))
+    setReparto({}); setTocadas(new Set())
     setExistente(null)
     cargarCierres()
     supabase.from('v_cierres').select('*').eq('fecha', f.fecha).maybeSingle().then(({ data }) => setExistente(data as Cierre | null))
@@ -148,6 +170,25 @@ export function CierreCaja() {
             <CampoDinero id="datafono" etiqueta="Datáfono" valor={f.datafono} onCambio={n => set('datafono', n)} />
           </div>
 
+          {llevaReparto && (
+            <>
+              <p className="antetitulo" style={{ marginTop: 22 }}>Reparto por cuentas</p>
+              <p className="muted" style={{ marginTop: -4, fontSize: 14 }}>
+                Dónde quedó la plata del día. La caja y Bold se llenan solos; reparte las transferencias según a qué cuenta llegaron.
+              </p>
+              <div className="campos">
+                {repartoFilas.map(({ cuenta, valor }) => (
+                  <CampoDinero key={cuenta.id} id={`rep-${cuenta.id}`} etiqueta={cuenta.nombre} valor={valor}
+                    onCambio={n => cambiarReparto(cuenta.id, n)} />
+                ))}
+              </div>
+              <p className="ayuda" style={{ marginTop: 8, color: porRepartir !== 0 ? 'var(--alerta)' : undefined }}>
+                {porRepartir === 0 ? `Repartido completo: ${pesos(sumaReparto)}`
+                  : porRepartir > 0 ? `Falta repartir ${pesos(porRepartir)}` : `Sobran ${pesos(-porRepartir)}`}
+              </p>
+            </>
+          )}
+
           <p className="antetitulo" style={{ marginTop: 22 }}>Caja</p>
           <div className="campos">
             <CampoDinero id="base" etiqueta="Base inicial" valor={f.base} onCambio={n => set('base', n)}
@@ -181,6 +222,16 @@ export function CierreCaja() {
             <div className="fila"><span>Transferencias</span><span className="cifra">{pesos(f.transferencias)}</span></div>
             <div className="fila"><span>Datáfono</span><span className="cifra">{pesos(f.datafono)}</span></div>
           </div>
+          {llevaReparto && (
+            <div className="tarjeta resumen" aria-live="polite">
+              <p className="antetitulo">Reparto</p>
+              {repartoFilas.map(r => (
+                <div className="fila" key={r.cuenta.id}><span>{r.cuenta.nombre}</span><span className="cifra">{pesos(r.valor)}</span></div>
+              ))}
+              <div className="fila"><strong>Por repartir</strong>
+                <strong className="cifra" style={{ color: porRepartir !== 0 ? 'var(--alerta)' : undefined }}>{pesos(porRepartir)}</strong></div>
+            </div>
+          )}
           <div className="tarjeta resumen" aria-live="polite">
             <p className="antetitulo">Efectivo en caja al cerrar</p>
             <div className="cifra total" style={{ color: caja < 0 ? 'var(--alerta)' : undefined }}>{pesos(caja)}</div>
@@ -238,6 +289,9 @@ export function CierreCaja() {
             <div className="fila"><span>Transferencias</span><span className="cifra">{pesos(f.transferencias)}</span></div>
             <div className="fila"><span>Datáfono</span><span className="cifra">{pesos(f.datafono)}</span></div>
             <div className="fila"><strong>Venta total</strong><strong className="cifra">{pesos(venta)}</strong></div>
+            {llevaReparto && repartoFilas.filter(r => r.valor > 0).map(r => (
+              <div className="fila" key={r.cuenta.id}><span>Queda en {r.cuenta.nombre}</span><span className="cifra">{pesos(r.valor)}</span></div>
+            ))}
             <div className="fila"><span>Base inicial</span><span className="cifra">{pesos(f.base)}</span></div>
             <div className="fila"><span>Retiro</span><span className="cifra">{pesos(f.retiro)}</span></div>
             <div className="fila"><strong>Queda en caja</strong><strong className="cifra">{pesos(caja)}</strong></div>
@@ -263,39 +317,76 @@ const CAMPOS_AJUSTE = [
   { valor: 'datafono', texto: 'Datáfono' },
   { valor: 'base_inicial', texto: 'Base inicial' },
   { valor: 'retiro', texto: 'Retiro' },
+  { valor: 'reparto', texto: 'Reparto por cuenta' },
 ] as const
 
 function AjusteCierre({ cierre, onCerrar, onGuardado }: { cierre: Cierre; onCerrar: () => void; onGuardado: () => void }) {
   const { sesion } = useSesion()
+  const cuentas = useCuentas()
   const [campo, setCampo] = useState<typeof CAMPOS_AJUSTE[number]['valor']>('efectivo')
+  const [cuentaId, setCuentaId] = useState('')
+  const [reparto, setReparto] = useState<RepartoCierre[]>([])
   const [texto, setTexto] = useState('')
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
-  const actual = cierre[campo]
+  const conReparto = cierre.fecha >= INICIO_SALDOS
+  const campos = CAMPOS_AJUSTE.filter(c => c.valor !== 'reparto' || conReparto)
+
+  useEffect(() => {
+    if (!conReparto) return
+    supabase.from('reparto_cierre').select('*').eq('cierre_id', cierre.id)
+      .then(({ data }) => setReparto((data ?? []) as RepartoCierre[]))
+  }, [cierre.id, conReparto])
+
+  const enCuenta = (id: string) => reparto.filter(r => r.cuenta_id === id).reduce((s, r) => s + r.valor, 0)
+  const actual = campo === 'reparto' ? (cuentaId ? enCuenta(cuentaId) : 0) : cierre[campo]
   const diferencia = leerPesos(texto)
+  const descuadre = cierre.venta_total - cierre.reparto_total
 
   async function guardar() {
     setGuardando(true); setError(null)
-    const { error } = await supabase.from('ajustes_cierre').insert({
-      cierre_id: cierre.id, campo, diferencia, motivo: motivo.trim(), creado_por: sesion!.user.id,
-    })
+    const { error } = campo === 'reparto'
+      ? await supabase.from('reparto_cierre').insert({
+          cierre_id: cierre.id, cuenta_id: cuentaId, valor: diferencia, es_ajuste: true,
+          motivo: motivo.trim(), creado_por: sesion!.user.id,
+        })
+      : await supabase.from('ajustes_cierre').insert({
+          cierre_id: cierre.id, campo, diferencia, motivo: motivo.trim(), creado_por: sesion!.user.id,
+        })
     setGuardando(false)
     if (error) setError(mensajeError(error)); else onGuardado()
   }
 
+  const valido = diferencia !== 0 && motivo.trim().length >= 5 && (campo !== 'reparto' || !!cuentaId)
+
   return (
     <Dialogo titulo={`Ajustar cierre del ${fechaCorta(cierre.fecha)}`} onCerrar={onCerrar}>
       <p className="muted" style={{ marginTop: 0 }}>El cierre original no se modifica: se suma este ajuste con su motivo.</p>
+      {conReparto && descuadre !== 0 && (
+        <Aviso tipo="info">El reparto por cuentas no cuadra con la venta: {descuadre > 0 ? `falta repartir ${pesos(descuadre)}` : `sobran ${pesos(-descuadre)}`}. Ajústalo en "Reparto por cuenta".</Aviso>
+      )}
       <div style={{ display: 'grid', gap: 14 }}>
         <div className="campo">
           <span className="etiqueta">Qué valor corriges</span>
           <div className="segmentos">
-            {CAMPOS_AJUSTE.map(c => (
+            {campos.map(c => (
               <button key={c.valor} type="button" aria-pressed={campo === c.valor} onClick={() => setCampo(c.valor)}>{c.texto}</button>
             ))}
           </div>
+          {conReparto && ['efectivo', 'transferencias', 'datafono'].includes(campo) && (
+            <span className="ayuda">Si cambia la venta, registra también un ajuste en "Reparto por cuenta" para que cuadre.</span>
+          )}
         </div>
+        {campo === 'reparto' && (
+          <div className="campo">
+            <label htmlFor="aj-cuenta">Cuenta</label>
+            <select id="aj-cuenta" className="entrada" value={cuentaId} onChange={e => setCuentaId(e.target.value)}>
+              <option value="">Elige…</option>
+              {cuentas.map(c => <option key={c.id} value={c.id}>{c.nombre} · {pesos(enCuenta(c.id))}</option>)}
+            </select>
+          </div>
+        )}
         <div className="campo">
           <label htmlFor="dif">Diferencia (usa − para restar)</label>
           <input id="dif" className="entrada dinero" inputMode="text" placeholder="Ej. 20000 o -5000"
@@ -309,7 +400,7 @@ function AjusteCierre({ cierre, onCerrar, onGuardado }: { cierre: Cierre; onCerr
         {error && <Aviso tipo="error">{error}</Aviso>}
       </div>
       <div className="acciones">
-        <button className="boton" disabled={guardando || diferencia === 0 || motivo.trim().length < 5} onClick={guardar}>
+        <button className="boton" disabled={guardando || !valido} onClick={guardar}>
           {guardando ? 'Guardando…' : 'Registrar ajuste'}
         </button>
         <button className="boton contorno" onClick={onCerrar}>Cancelar</button>

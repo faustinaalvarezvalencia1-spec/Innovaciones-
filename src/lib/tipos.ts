@@ -21,10 +21,11 @@ export interface Cierre {
   efectivo_en_caja: number | null
   estado: 'OK' | 'Revisar'
   motivos_revisar: string[]
+  reparto_total: number
 }
 
 export const CATEGORIAS_GASTO = ['Nómina', 'Arriendo', 'Servicios', 'Plataformas', 'Compra de mercancía', 'Mantenimiento',
-  'Papelería', 'Exhibición y mobiliario', 'Publicidad', 'Transporte', 'Impuestos', 'Otros'] as const
+  'Papelería', 'Exhibición y mobiliario', 'Publicidad', 'Transporte', 'Impuestos', 'Comisiones bancarias', 'Otros'] as const
 
 export const MEDIOS_PAGO = ['Efectivo de caja', 'Débito bancario', 'Transferencia', 'Cuenta personal', 'Tarjeta', 'Sin definir'] as const
 
@@ -44,8 +45,25 @@ export interface Gasto {
   ajusta_gasto_id: string | null
   motivo_ajuste: string | null
   estimado: boolean
+  cuenta_id: string | null
   proveedores?: { nombre: string } | null
 }
+
+/** Desde esta fecha se llevan saldos por cuenta (cierres con reparto, gastos con cuenta). */
+export const INICIO_SALDOS = '2026-11-01'
+
+export interface Cuenta { id: string; nombre: string; tipo: 'Efectivo' | 'Banco' | 'Billetera' | 'Datáfono'; orden: number; activo: boolean }
+
+export interface MovimientoCuenta {
+  cuenta_id: string; fecha: string; tipo: 'Apertura' | 'Venta' | 'Gasto' | 'Retiro' | 'Traslado'
+  concepto: string; valor: number; creado_en: string | null
+}
+
+export interface RepartoCierre { id: string; cierre_id: string; cuenta_id: string; valor: number; es_ajuste: boolean; motivo: string | null }
+
+/** Medios de pago que salen de una cuenta del negocio y por eso piden cuál. */
+export const MEDIOS_CON_CUENTA = ['Débito bancario', 'Transferencia'] as const
+export const medioPideCuenta = (medio: string) => (MEDIOS_CON_CUENTA as readonly string[]).includes(medio)
 
 export interface GastoFijo {
   id: string; nombre: string; categoria: string; valor_estimado: number; dia_pago: number | null

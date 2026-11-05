@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
-import { CATEGORIAS_GASTO, MEDIOS_PAGO, type Gasto, type GastoFijo, type Proveedor } from '../lib/tipos'
+import { CATEGORIAS_GASTO, MEDIOS_PAGO, medioPideCuenta, type Cuenta, type Gasto, type GastoFijo, type Proveedor } from '../lib/tipos'
+import { esCaja, useCuentas } from '../lib/cuentas'
 import { fechaCorta, hoy, leerPesos, mensajeError, mesSiguiente, nombreMes, pesos, primerDiaMes } from '../lib/formato'
 import { Aviso, CampoDinero, Dialogo, useToast } from '../componentes/ui'
 import { useSesion } from '../componentes/Sesion'
@@ -11,13 +12,19 @@ const OTRO = '__otro__'
 
 interface Formulario {
   fecha: string; gastoFijoId: string; categoria: string; tipo: 'Fijo' | 'Variable'
-  proveedorId: string; beneficiario: string; concepto: string; valor: number; medio: string; estimado: boolean
+  proveedorId: string; beneficiario: string; concepto: string; valor: number; medio: string; cuentaId: string; estimado: boolean
 }
 
 const nuevo = (): Formulario => ({
   fecha: hoy(), gastoFijoId: '', categoria: '', tipo: 'Variable', proveedorId: '', beneficiario: '',
-  concepto: '', valor: 0, medio: 'Efectivo de caja', estimado: false,
+  concepto: '', valor: 0, medio: 'Efectivo de caja', cuentaId: '', estimado: false,
 })
+
+/** Cuenta de la que sale el gasto: la caja si es efectivo, la elegida si es débito o transferencia, ninguna en los demás. */
+function cuentaDelGasto(medio: string, cuentaId: string, cuentas: Cuenta[]): string | null {
+  if (medio === 'Efectivo de caja') return cuentas.find(esCaja)?.id ?? null
+  return medioPideCuenta(medio) ? (cuentaId || null) : null
+}
 
 export function Gastos() {
   const { sesion } = useSesion()
@@ -33,6 +40,9 @@ export function Gastos() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [corrigiendo, setCorrigiendo] = useState<Gasto | null>(null)
+  const cuentas = useCuentas()
+  const cuentasBanco = cuentas.filter(c => !esCaja(c))
+  const nombreCuenta = (id: string | null) => cuentas.find(c => c.id === id)?.nombre
 
   const set = <K extends keyof Formulario>(k: K, v: Formulario[K]) => setF(p => ({ ...p, [k]: v }))
 
@@ -72,6 +82,7 @@ export function Gastos() {
     if (!f.proveedorId || (f.proveedorId === OTRO && !f.beneficiario.trim())) x.push('proveedor o beneficiario')
     if (!f.concepto.trim()) x.push('concepto')
     if (f.valor <= 0) x.push('valor')
+    if (medioPideCuenta(f.medio) && !f.cuentaId) x.push('de qué cuenta sale')
     return x
   }, [f])
 
@@ -91,11 +102,11 @@ export function Gastos() {
         proveedor_id: f.proveedorId && f.proveedorId !== OTRO ? f.proveedorId : null,
         beneficiario: f.proveedorId === OTRO ? f.beneficiario.trim() : null,
         gasto_fijo_id: f.gastoFijoId || null, concepto: f.concepto.trim(), valor: f.valor,
-        medio_pago: f.medio, soporte_url: soporte, estimado: f.estimado, creado_por: sesion!.user.id,
+        medio_pago: f.medio, cuenta_id: cuentaDelGasto(f.medio, f.cuentaId, cuentas), soporte_url: soporte, estimado: f.estimado, creado_por: sesion!.user.id,
       })
       if (e) throw e
       toast(`Gasto guardado: ${pesos(f.valor)}`)
-      setConfirmar(false); setF({ ...nuevo(), fecha: f.fecha, medio: f.medio }); setFoto(null)
+      setConfirmar(false); setF({ ...nuevo(), fecha: f.fecha, medio: f.medio, cuentaId: f.cuentaId }); setFoto(null)
       if (primerDiaMes(f.fecha) !== mes) setMes(primerDiaMes(f.fecha)); else cargar()
     } catch (e) {
       setError(mensajeError(e))
@@ -176,8 +187,18 @@ export function Gastos() {
             <select id="g-medio" className="entrada" value={f.medio} onChange={e => set('medio', e.target.value)}>
               {MEDIOS_PAGO.map(m => <option key={m}>{m}</option>)}
             </select>
-            <span className="ayuda">{f.medio === 'Efectivo de caja' ? 'Se descuenta del efectivo en caja de ese día.' : 'No afecta la caja del día.'}</span>
+            <span className="ayuda">{f.medio === 'Efectivo de caja' ? 'Se descuenta de la caja.'
+              : medioPideCuenta(f.medio) ? 'Se descuenta de la cuenta que elijas.' : 'No afecta los saldos de las cuentas del negocio.'}</span>
           </div>
+          {medioPideCuenta(f.medio) && (
+            <div className="campo">
+              <label htmlFor="g-cuenta">Sale de</label>
+              <select id="g-cuenta" className="entrada" value={f.cuentaId} onChange={e => set('cuentaId', e.target.value)}>
+                <option value="">Elige la cuenta…</option>
+                {cuentasBanco.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              </select>
+            </div>
+          )}
           <div className="campo">
             <span className="etiqueta">Soporte (opcional)</span>
             <div className="foto">
@@ -220,6 +241,7 @@ export function Gastos() {
                   <strong>{g.concepto}</strong>
                   <span className="muted" style={{ fontSize: 14 }}>
                     {fechaCorta(g.fecha)} · {g.categoria} · {nombreProveedor(g)} · {g.medio_pago}
+                    {nombreCuenta(g.cuenta_id) && g.medio_pago !== 'Efectivo de caja' ? ` · ${nombreCuenta(g.cuenta_id)}` : ''}
                   </span>
                   <div className="chips" style={{ marginTop: 4 }}>
                     {g.estimado && <span className="sticker">Estimado</span>}
@@ -250,6 +272,7 @@ export function Gastos() {
             <div className="fila"><span>Categoría · tipo</span><span>{f.categoria} · {f.tipo}</span></div>
             <div className="fila"><span>A quién</span><span>{f.proveedorId === OTRO ? f.beneficiario : proveedores.find(p => p.id === f.proveedorId)?.nombre}</span></div>
             <div className="fila"><span>Medio de pago</span><span>{f.medio}</span></div>
+            {medioPideCuenta(f.medio) && <div className="fila"><span>Sale de</span><span>{nombreCuenta(f.cuentaId)}</span></div>}
             <div className="fila"><strong>Valor</strong><strong className="cifra">{pesos(f.valor)}</strong></div>
             <div className="fila"><span>Soporte</span><span>{foto ? 'Sí' : 'No'}</span></div>
           </div>
@@ -261,18 +284,23 @@ export function Gastos() {
         </Dialogo>
       )}
 
-      {corrigiendo && <CorregirGasto gasto={corrigiendo} onCerrar={() => setCorrigiendo(null)}
+      {corrigiendo && <CorregirGasto gasto={corrigiendo} cuentas={cuentas} onCerrar={() => setCorrigiendo(null)}
         onGuardado={() => { setCorrigiendo(null); cargar(); toast('Corrección registrada') }} />}
     </>
   )
 }
 
 /** Corrección por ajuste: cambia el valor o el medio de pago sin tocar el gasto original. */
-function CorregirGasto({ gasto, onCerrar, onGuardado }: { gasto: Gasto; onCerrar: () => void; onGuardado: () => void }) {
+function CorregirGasto({ gasto, cuentas, onCerrar, onGuardado }: { gasto: Gasto; cuentas: Cuenta[]; onCerrar: () => void; onGuardado: () => void }) {
   const { sesion } = useSesion()
   const [modo, setModo] = useState<'valor' | 'medio'>(gasto.medio_pago === 'Sin definir' ? 'medio' : 'valor')
   const [texto, setTexto] = useState('')
   const [medio, setMedio] = useState(gasto.medio_pago === 'Sin definir' ? 'Débito bancario' : gasto.medio_pago)
+  const [cuentaId, setCuentaId] = useState(gasto.cuenta_id ?? '')
+  // Cuenta que tenía el gasto original (los de efectivo anteriores a esta versión no la guardaban).
+  const cuentaOriginal = cuentaDelGasto(gasto.medio_pago, gasto.cuenta_id ?? '', cuentas)
+  const cuentaNueva = cuentaDelGasto(medio, cuentaId, cuentas)
+  const nombre = (id: string | null) => cuentas.find(c => c.id === id)?.nombre
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
@@ -288,24 +316,29 @@ function CorregirGasto({ gasto, onCerrar, onGuardado }: { gasto: Gasto; onCerrar
     setGuardando(true); setError(null)
     const m = motivo.trim()
     const filas = modo === 'valor'
-      ? [{ ...base, valor: diferencia, medio_pago: gasto.medio_pago, motivo_ajuste: m }]
+      ? [{ ...base, valor: diferencia, medio_pago: gasto.medio_pago, cuenta_id: cuentaOriginal, motivo_ajuste: m }]
       : [
-          { ...base, valor: -gasto.valor, medio_pago: gasto.medio_pago, motivo_ajuste: `${m} (sale de ${gasto.medio_pago})` },
-          { ...base, valor: gasto.valor, medio_pago: medio, motivo_ajuste: `${m} (entra a ${medio})` },
+          { ...base, valor: -gasto.valor, medio_pago: gasto.medio_pago, cuenta_id: cuentaOriginal,
+            motivo_ajuste: `${m} (sale de ${[gasto.medio_pago, nombre(cuentaOriginal)].filter(Boolean).join(' · ')})` },
+          { ...base, valor: gasto.valor, medio_pago: medio, cuenta_id: cuentaNueva,
+            motivo_ajuste: `${m} (entra a ${[medio, nombre(cuentaNueva)].filter(Boolean).join(' · ')})` },
         ]
     const { error } = await supabase.from('gastos').insert(filas)
     setGuardando(false)
     if (error) setError(mensajeError(error)); else onGuardado()
   }
 
-  const valido = motivo.trim().length >= 5 && (modo === 'valor' ? diferencia !== 0 : medio !== gasto.medio_pago)
+  const cambiaMedio = medio !== gasto.medio_pago || cuentaNueva !== cuentaOriginal
+  const valido = motivo.trim().length >= 5 && (modo === 'valor'
+    ? diferencia !== 0
+    : cambiaMedio && (!medioPideCuenta(medio) || !!cuentaId))
 
   return (
     <Dialogo titulo="Corregir gasto" onCerrar={onCerrar}>
-      <p style={{ marginTop: 0 }}><strong>{gasto.concepto}</strong> · {pesos(gasto.valor)} · {gasto.medio_pago}</p>
+      <p style={{ marginTop: 0 }}><strong>{gasto.concepto}</strong> · {pesos(gasto.valor)} · {gasto.medio_pago}{nombre(cuentaOriginal) && gasto.medio_pago !== 'Efectivo de caja' ? ` · ${nombre(cuentaOriginal)}` : ''}</p>
       <div style={{ display: 'grid', gap: 14 }}>
         <div className="segmentos">
-          <button type="button" aria-pressed={modo === 'medio'} onClick={() => setModo('medio')}>Cambiar medio de pago</button>
+          <button type="button" aria-pressed={modo === 'medio'} onClick={() => setModo('medio')}>Cambiar medio o cuenta</button>
           <button type="button" aria-pressed={modo === 'valor'} onClick={() => setModo('valor')}>Corregir el valor</button>
         </div>
         {modo === 'valor' ? (
@@ -320,6 +353,15 @@ function CorregirGasto({ gasto, onCerrar, onGuardado }: { gasto: Gasto; onCerrar
             <select id="c-medio" className="entrada" value={medio} onChange={e => setMedio(e.target.value)}>
               {MEDIOS_PAGO.filter(x => x !== 'Sin definir').map(x => <option key={x}>{x}</option>)}
             </select>
+            {medioPideCuenta(medio) && (
+              <>
+                <label htmlFor="c-cuenta" style={{ marginTop: 10 }}>Sale de</label>
+                <select id="c-cuenta" className="entrada" value={cuentaId} onChange={e => setCuentaId(e.target.value)}>
+                  <option value="">Elige la cuenta…</option>
+                  {cuentas.filter(c => !esCaja(c)).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </>
+            )}
           </div>
         )}
         <div className="campo">

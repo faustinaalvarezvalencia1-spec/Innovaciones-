@@ -7,6 +7,7 @@ const enlaces = [
   { a: '/', texto: 'Inicio', icono: 'inicio', admin: true },
   { a: '/cierre', texto: 'Cierre', icono: 'caja', admin: false },
   { a: '/gastos', texto: 'Gastos', icono: 'gasto', admin: true },
+  { a: '/saldos', texto: 'Saldos', icono: 'banco', admin: true },
   { a: '/inventario', texto: 'Inventario', icono: 'inventario', admin: false },
   { a: '/ajustes', texto: 'Ajustes', icono: 'ajustes', admin: true },
 ]

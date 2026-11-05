@@ -11,6 +11,7 @@ import { CierreCaja } from './paginas/CierreCaja'
 import { Gastos } from './paginas/Gastos'
 import { Inventario } from './paginas/Inventario'
 import { Ajustes } from './paginas/Ajustes'
+import { Saldos } from './paginas/Saldos'
 
 function SoloAdmin({ children }: { children: ReactNode }) {
   const { esAdmin } = useSesion()
@@ -39,6 +40,7 @@ function Rutas() {
         <Route index element={<SoloAdmin><Inicio /></SoloAdmin>} />
         <Route path="cierre" element={<CierreCaja />} />
         <Route path="gastos" element={<SoloAdmin><Gastos /></SoloAdmin>} />
+        <Route path="saldos" element={<SoloAdmin><Saldos /></SoloAdmin>} />
         <Route path="inventario" element={<Inventario />} />
         <Route path="ajustes" element={<SoloAdmin><Ajustes /></SoloAdmin>} />
         <Route path="*" element={<Navigate to="/" replace />} />
