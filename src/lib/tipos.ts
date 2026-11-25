@@ -50,7 +50,7 @@ export interface Gasto {
 }
 
 /** Desde esta fecha se llevan saldos por cuenta (cierres con reparto, gastos con cuenta). */
-export const INICIO_SALDOS = '2026-11-01'
+export const INICIO_SALDOS = '2026-12-01'
 
 export interface Cuenta { id: string; nombre: string; tipo: 'Efectivo' | 'Banco' | 'Billetera' | 'Datáfono'; orden: number; activo: boolean }
 

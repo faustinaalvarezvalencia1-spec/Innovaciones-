@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Cuenta, MovimientoCuenta } from '../lib/tipos'
+import { INICIO_SALDOS, type Cuenta, type MovimientoCuenta } from '../lib/tipos'
 import { fechaCorta, fechaLarga, hoy, mensajeError, mesSiguiente, nombreMes, pesos, primerDiaMes } from '../lib/formato'
 import { esDatafono, useCuentas } from '../lib/cuentas'
 import { Aviso, CampoDinero, Cargando, Dialogo, useToast } from '../componentes/ui'
@@ -79,7 +79,7 @@ export function Saldos() {
       {pendientes.length > 0 && (
         <Aviso tipo="info">
           {pendientes.length === cuentas.length ? 'Las cuentas arrancaron' : `${pendientes.map(c => c.nombre).join(', ')} arrancaron`} en $0
-          el {fechaLarga('2026-11-01')}: los saldos muestran lo que entró y salió desde ahí, no lo que hay de verdad.
+          el {fechaLarga(INICIO_SALDOS)}: los saldos muestran lo que entró y salió desde ahí, no lo que hay de verdad.
           Cuando tengas el saldo real de cada app, regístralo con "Saldo de apertura".
         </Aviso>
       )}
